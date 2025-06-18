@@ -5,7 +5,7 @@ from django.db import models
 class Supplier(models.Model):
     nombre = models.CharField(max_length=100)
     codigo = models.CharField(max_length=100)
-    contacto = models.CharField(max_length=50)
+    telefono = models.CharField(max_length=50)
     eliminado = models.BooleanField(default=False)
     creacion = models.DateField(auto_now_add=True)
 
