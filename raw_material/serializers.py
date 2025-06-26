@@ -44,6 +44,8 @@ class RawMaterialSerializer(serializers.ModelSerializer):
     proveedor = serializers.CharField(source='proveedor.nombre', read_only=True)
     categoria =  serializers.CharField(source='categoria.nombre', read_only=True)
     unidad = serializers.CharField(source='unidad.nombre', read_only=True)
+    factorBase = serializers.IntegerField(source='unidad.factorBase', read_only=True)
+    tipoUnidad = serializers.CharField(source='unidad.tipo', read_only=True)
     proveedor_id = serializers.PrimaryKeyRelatedField(
         queryset=Supplier.objects.all(), 
         source='proveedor', 

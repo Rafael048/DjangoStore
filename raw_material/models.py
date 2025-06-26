@@ -18,6 +18,8 @@ class Categories(models.Model):
 
 class Units(models.Model):
     nombre = models.CharField(max_length=100)
+    tipo = models.CharField(max_length=100)
+    factorBase = models.FloatField()
     eliminado = models.BooleanField(default=False)
     creacion = models.DateField(auto_now_add=True)
 
@@ -42,6 +44,6 @@ class PaySupplier(models.Model):
 
 class RawMaterialInventory(models.Model):
     materiaPrima = models.OneToOneField(RawMaterial , on_delete=models.CASCADE, related_name='inventario')
-    cantidad = models.IntegerField()
+    cantidad = models.FloatField()
     eliminado = models.BooleanField(default=False)
     creacion = models.DateField(auto_now_add=True)
