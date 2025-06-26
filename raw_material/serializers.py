@@ -1,8 +1,14 @@
 from rest_framework import serializers
-from .models import RawMaterial, Supplier, Categories, Units
+from .models import RawMaterial, Supplier, Categories, Units, PaySupplier, RawMaterialInventory
 
 
+class PaySupplierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaySupplier
+        fields = '__all__'
+        read_only = ['creacion']
 class SupplierSerializer(serializers.ModelSerializer):
+    pagos = PaySupplierSerializer(read_only=True, many=True)
     class Meta:
         model = Supplier
         fields = '__all__'
@@ -20,11 +26,24 @@ class UnitsSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only = ['creacion']
 
+class RawMaterialInventorySerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = RawMaterialInventory
+        fields = '__all__'
+        read_only = ['creacion']
+    
+    def update(self, instance, validated_data):
+            campo_a_sumar = 'cantidad'  
+        
+            if campo_a_sumar in validated_data:
+                 validated_data[campo_a_sumar] = getattr(instance, campo_a_sumar) + validated_data[campo_a_sumar]
+            return super().update(instance, validated_data)
 
 class RawMaterialSerializer(serializers.ModelSerializer):
-    proveedor = SupplierSerializer(read_only=True) 
-    categoria = CategoriesSerializer(read_only=True)
-    unidad = UnitsSerializer(read_only=True)
+    inventario = RawMaterialInventorySerializer(read_only=True)
+    proveedor = serializers.CharField(source='proveedor.nombre', read_only=True)
+    categoria =  serializers.CharField(source='categoria.nombre', read_only=True)
+    unidad = serializers.CharField(source='unidad.nombre', read_only=True)
     proveedor_id = serializers.PrimaryKeyRelatedField(
         queryset=Supplier.objects.all(), 
         source='proveedor', 
@@ -60,4 +79,3 @@ class RawMaterialSerializer(serializers.ModelSerializer):
            
           return value
 
-            
