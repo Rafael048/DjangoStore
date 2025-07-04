@@ -25,7 +25,6 @@ class Units(models.Model):
 
 class RawMaterial(models.Model):
     nombre = models.CharField(max_length=100)
-    precio = models.FloatField()
     unidad = models.ForeignKey(Units, on_delete=models.CASCADE)
     proveedor = models.ForeignKey(Supplier, on_delete=models.CASCADE)
     categoria = models.ForeignKey(Categories, on_delete=models.CASCADE)
@@ -43,7 +42,8 @@ class PaySupplier(models.Model):
     creacion = models.DateField(auto_now_add=True)
 
 class RawMaterialInventory(models.Model):
-    materiaPrima = models.OneToOneField(RawMaterial , on_delete=models.CASCADE, related_name='inventario')
+    materiaPrima = models.ForeignKey(RawMaterial , on_delete=models.CASCADE, related_name='inventario')
     cantidad = models.FloatField()
+    precio = models.FloatField()
     eliminado = models.BooleanField(default=False)
     creacion = models.DateField(auto_now_add=True)

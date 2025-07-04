@@ -1,6 +1,8 @@
 from rest_framework import viewsets
 from .serializers import SupplierSerializer, CategoriesSerializer, RawMaterialSerializer, UnitsSerializer, PaySupplierSerializer,RawMaterialInventorySerializer
 from .models import Supplier, Categories, RawMaterial, Units, PaySupplier, RawMaterialInventory
+from django.db.models import Prefetch
+
 class SupplierView(viewsets.ModelViewSet):
     serializer_class = SupplierSerializer
     def get_queryset(self):
@@ -24,9 +26,13 @@ class RawMaterialInventoryView(viewsets.ModelViewSet):
    def get_queryset(self):
       queryset = RawMaterialInventory.objects.filter(eliminado = False)
       eliminado = self.request.query_params.get('eliminados')
+      materiaPrima = self.request.query_params.get('materiaPrima')
+      if materiaPrima:
+         queryset = RawMaterialInventory.objects.filter(materiaPrima = materiaPrima, eliminado = False)
       if eliminado:
          queryset = RawMaterialInventory.objects.all()
       return queryset
+
    
 class CategoriesView(viewsets.ModelViewSet):
     serializer_class = CategoriesSerializer
@@ -49,16 +55,13 @@ class UnitsView(viewsets.ModelViewSet):
 class RawMaterialView(viewsets.ModelViewSet):
     serializer_class = RawMaterialSerializer
     def get_queryset(self):
-     queryset = RawMaterial.objects.filter(eliminado = False).prefetch_related('proveedor','categoria', 'unidad','inventario')
+     queryset = RawMaterial.objects.filter(eliminado = False).prefetch_related('proveedor','categoria', 'unidad',  Prefetch('inventario',
+                   queryset=RawMaterialInventory.objects.filter(eliminado=False))
+        )
      eliminado = self.request.query_params.get('eliminados')
      if eliminado: 
-        queryset = RawMaterial.objects.all().prefetch_related('proveedor','categoria', 'unidad','inventario')
+        queryset = RawMaterial.objects.all().prefetch_related('proveedor','categoria', 'unidad','inventario',Prefetch('inventario',
+                   queryset=RawMaterialInventory.objects.filter(eliminado=False)))
      return queryset
-    def perform_create(self, serializer):
-        instancia = serializer.save()
-        
-        RawMaterialInventory.objects.create(
-            materiaPrima = instancia,
-            cantidad =  0
-        )
+   
    

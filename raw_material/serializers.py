@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import RawMaterial, Supplier, Categories, Units, PaySupplier, RawMaterialInventory
+from django.db.models import Avg, Sum
+from django.db import models
 
 
 class PaySupplierSerializer(serializers.ModelSerializer):
@@ -32,19 +34,16 @@ class RawMaterialInventorySerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only = ['creacion']
     
-    def update(self, instance, validated_data):
-            campo_a_sumar = 'cantidad'  
-        
-            if campo_a_sumar in validated_data:
-                 validated_data[campo_a_sumar] = getattr(instance, campo_a_sumar) + validated_data[campo_a_sumar]
-            return super().update(instance, validated_data)
+   
 
 class RawMaterialSerializer(serializers.ModelSerializer):
-    inventario = RawMaterialInventorySerializer(read_only=True)
+    inventario = RawMaterialInventorySerializer(read_only=True, many=True)
     proveedor = serializers.CharField(source='proveedor.nombre', read_only=True)
     categoria =  serializers.CharField(source='categoria.nombre', read_only=True)
     unidad = serializers.CharField(source='unidad.nombre', read_only=True)
-    factorBase = serializers.IntegerField(source='unidad.factorBase', read_only=True)
+    factorBase = serializers.FloatField(source='unidad.factorBase', read_only=True)
+    precio_promedio = serializers.SerializerMethodField()
+    cantidad_total = serializers.SerializerMethodField()
     tipoUnidad = serializers.CharField(source='unidad.tipo', read_only=True)
     proveedor_id = serializers.PrimaryKeyRelatedField(
         queryset=Supplier.objects.all(), 
@@ -80,4 +79,18 @@ class RawMaterialSerializer(serializers.ModelSerializer):
         })
            
           return value
+    def get_precio_promedio(self, obj):
+        if hasattr(obj, 'precio_promedio'):
+            return obj.precio_promedio
+        return round(obj.inventario.filter(eliminado=False).aggregate(
+            avg=Avg('precio')
+        )['avg'] or 0,2)
+
+    def get_cantidad_total(self, obj):
+        if hasattr(obj, 'cantidad_total'):
+            return obj.cantidad_total
+        return round(obj.inventario.filter(eliminado=False).aggregate(
+            total=Sum('cantidad')
+        )['total'] or 0,2) 
+
 
